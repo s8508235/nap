@@ -1,6 +1,7 @@
 package nap
 
 import (
+	"context"
 	"database/sql"
 )
 
@@ -8,9 +9,12 @@ import (
 // It holds a prepared statement for each underlying physical db.
 type Stmt interface {
 	Close() error
-	Exec(...interface{}) (sql.Result, error)
-	Query(...interface{}) (*sql.Rows, error)
-	QueryRow(...interface{}) *sql.Row
+	Exec(args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error)
+	Query(args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows, error)
+	QueryRow(args ...interface{}) *sql.Row
+	QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row
 }
 
 type stmt struct {
@@ -33,11 +37,19 @@ func (s *stmt) Exec(args ...interface{}) (sql.Result, error) {
 	return s.stmts[0].Exec(args...)
 }
 
+func (s *stmt) ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error) {
+	return s.stmts[0].ExecContext(ctx, args...)
+}
+
 // Query executes a prepared query statement with the given
 // arguments and returns the query results as a *sql.Rows.
 // Query uses a slave as the underlying physical db.
 func (s *stmt) Query(args ...interface{}) (*sql.Rows, error) {
 	return s.stmts[s.db.slave(len(s.db.pdbs))].Query(args...)
+}
+
+func (s *stmt) QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
+	return s.stmts[0].QueryContext(ctx, args...)
 }
 
 // QueryRow executes a prepared query statement with the given arguments.
@@ -48,4 +60,8 @@ func (s *stmt) Query(args ...interface{}) (*sql.Rows, error) {
 // QueryRow uses a slave as the underlying physical db.
 func (s *stmt) QueryRow(args ...interface{}) *sql.Row {
 	return s.stmts[s.db.slave(len(s.db.pdbs))].QueryRow(args...)
+}
+
+func (s *stmt) QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row {
+	return s.stmts[0].QueryRowContext(ctx, args...)
 }

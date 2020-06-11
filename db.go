@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"math"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -205,4 +206,19 @@ func (db *DB) slave(n int) int {
 		return 0
 	}
 	return int(1 + (atomic.AddUint64(&db.count, 1) % uint64(n-1)))
+}
+
+func (db *DB) slaveWithMostIdel(n int) int {
+	if n <= 1 {
+		return 0
+	}
+	max := math.MinInt32
+	maxIndex := 1
+	for index, slave := range db.pdbs {
+		if max < slave.Stats().OpenConnections {
+			max = slave.Stats().OpenConnections
+			maxIndex = index
+		}
+	}
+	return maxIndex
 }
