@@ -9,6 +9,14 @@ Nap requires Go version 1.8 or greater.
 $ go get github.com/tsenart/nap
 ```
 
+```shell
+docker-compose up -d --scale postgresql-master=1 --scale postgresql-servant=3
+```
+
+```shell
+go run main.go
+```
+
 ## Usage
 ```go
 package main

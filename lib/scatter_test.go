@@ -1,4 +1,4 @@
-package nap
+package lib
 
 import (
 	"fmt"
